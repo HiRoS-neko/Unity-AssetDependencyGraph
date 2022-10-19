@@ -125,7 +125,7 @@ public class AssetDependencyGraph : EditorWindow
 
     private void ExploreAsset()
     {
-        Object obj = Selection.activeObject;
+        UnityEngine.Object obj = Selection.activeObject;
         string assetPath = AssetDatabase.GetAssetPath(obj);
 
         // assetPath will be empty if obj is null or isn't an asset (a scene object)
