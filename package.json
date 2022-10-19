@@ -1,11 +1,8 @@
 {
-    "name": "com.harryrose.assetdependencygraph",
-    "displayName": "Asset Dependency Graph",
-    "version": "1.0.1",
-    "unity": "2021.3",
-    "description": "The Asset Dependency Graph tool allows you to visualize an asset’s dependency chain",
-    "type" : "tool",
-    "author": {
-        "name": "Harry Rose and Kyle Giammarco",
-    }
+  "name": "com.harryrose.assetdependencygraph",
+  "displayName": "Asset Dependency Graph",
+  "version": "1.0.1",
+  "unity": "2021.3",
+  "description": "The Asset Dependency Graph tool allows you to visualize an asset’s dependency chain",
+  "type": "tool"
 }
