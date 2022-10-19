@@ -6,6 +6,6 @@
     "description": "The Asset Dependency Graph tool allows you to visualize an asset’s dependency chain",
     "type" : "tool",
     "author": {
-        "name": "Harry Rose & Kyle Giammarco",
+        "name": "Harry Rose \& Kyle Giammarco",
     }
 }
