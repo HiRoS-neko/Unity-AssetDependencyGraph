@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.UIElements;
+using UnityEngine;
+using Object = UnityEngine.Object;
 #if UNITY_2019_1_OR_NEWER
 using UnityEditor.Experimental.GraphView;
 using UnityEngine.UIElements;
@@ -11,7 +13,6 @@ using UnityEngine.Experimental.UIElements;
 using UnityEditor.Experimental.UIElements;
 using UnityEngine.Experimental.UIElements.StyleEnums;
 #endif
-using UnityEngine;
 
 public class AssetGraphView : GraphView
 {
@@ -24,7 +25,7 @@ public class AssetGraphView : GraphView
         this.AddManipulator(new RectangleSelector());
         this.AddManipulator(new FreehandSelector());
 
-        VisualElement background = new VisualElement
+        var background = new VisualElement
         {
             style =
             {
@@ -43,9 +44,9 @@ public class AssetDependencyGraph : EditorWindow
 
     private GraphView m_GraphView;
 
-    private readonly List<GraphElement>        m_AssetElements  = new List<GraphElement>();
-    private readonly Dictionary<string, Node>  m_GUIDNodeLookup = new Dictionary<string, Node>();
-    private readonly List<Node>                m_DependenciesForPlacement = new List<Node>();
+    private readonly List<GraphElement> m_AssetElements = new();
+    private readonly Dictionary<string, Node> m_GUIDNodeLookup = new();
+    private readonly List<Node> m_DependenciesForPlacement = new();
 
 #if !UNITY_2019_1_OR_NEWER
     private VisualElement rootVisualElement;
@@ -89,22 +90,26 @@ public class AssetDependencyGraph : EditorWindow
         {
             text = "Clear"
         });
-        
+
         var ts = new ToolbarSearchField();
-        ts.RegisterValueChangedCallback(x => {
-            if (string.IsNullOrEmpty(x.newValue)) {
+        ts.RegisterValueChangedCallback(x =>
+        {
+            if (string.IsNullOrEmpty(x.newValue))
+            {
                 m_GraphView.FrameAll();
                 return;
             }
-            
+
             m_GraphView.ClearSelection();
             // m_GraphView.graphElements.ForEach(y => { // BROKEN, Case 1268337
-            m_GraphView.graphElements.ToList().ForEach(y => {
-                if (y is Node node && y.title.IndexOf(x.newValue, StringComparison.OrdinalIgnoreCase) >= 0) {
+            m_GraphView.graphElements.ToList().ForEach(y =>
+            {
+                if (y is Node node && y.title.IndexOf(x.newValue, StringComparison.OrdinalIgnoreCase) >= 0)
+                {
                     m_GraphView.AddToSelection(node);
                 }
             });
-            
+
             m_GraphView.FrameSelection();
         });
         toolbar.Add(ts);
@@ -125,20 +130,20 @@ public class AssetDependencyGraph : EditorWindow
 
     private void ExploreAsset()
     {
-        UnityEngine.Object obj = Selection.activeObject;
-        string assetPath = AssetDatabase.GetAssetPath(obj);
+        var obj = Selection.activeObject;
+        var assetPath = AssetDatabase.GetAssetPath(obj);
 
         // assetPath will be empty if obj is null or isn't an asset (a scene object)
         if (obj == null || string.IsNullOrEmpty(assetPath))
             return;
 
-        Group      groupNode      = new Group {title = obj.name};
-        Object     mainObject     = AssetDatabase.LoadMainAssetAtPath(assetPath);
+        var groupNode = new Group { title = obj.name };
+        var mainObject = AssetDatabase.LoadMainAssetAtPath(assetPath);
 
-        string[] dependencies    = AssetDatabase.GetDependencies(assetPath, false);
-        bool     hasDependencies = dependencies.Length > 0;
+        var dependencies = AssetDatabase.GetDependencies(assetPath, false);
+        var hasDependencies = dependencies.Length > 0;
 
-        Node mainNode  = CreateNode(mainObject, assetPath, true, hasDependencies);
+        var mainNode = CreateNode(mainObject, assetPath, true, hasDependencies);
         mainNode.userData = 0;
 
         mainNode.SetPosition(new Rect(0, 0, 0, 0));
@@ -160,12 +165,12 @@ public class AssetDependencyGraph : EditorWindow
 
     private void CreateDependencyNodes(string[] dependencies, Node parentNode, Group groupNode, int depth)
     {
-        foreach (string dependencyString in dependencies)
+        foreach (var dependencyString in dependencies)
         {
-            Object dependencyAsset = AssetDatabase.LoadMainAssetAtPath(dependencyString);
-            string[] deeperDependencies = AssetDatabase.GetDependencies(dependencyString, false);
+            var dependencyAsset = AssetDatabase.LoadMainAssetAtPath(dependencyString);
+            var deeperDependencies = AssetDatabase.GetDependencies(dependencyString, false);
 
-            Node dependencyNode = CreateNode(dependencyAsset, AssetDatabase.GetAssetPath(dependencyAsset),
+            var dependencyNode = CreateNode(dependencyAsset, AssetDatabase.GetAssetPath(dependencyAsset),
                 false, deeperDependencies.Length > 0);
 
             if (!m_AssetElements.Contains(dependencyNode))
@@ -176,7 +181,7 @@ public class AssetDependencyGraph : EditorWindow
             if (!m_GraphView.Contains(dependencyNode))
                 m_GraphView.AddElement(dependencyNode);
 
-            Edge edge = new Edge
+            var edge = new Edge
             {
                 input = dependencyNode.inputContainer[0] as Port,
                 output = parentNode.outputContainer[0] as Port,
@@ -199,18 +204,17 @@ public class AssetDependencyGraph : EditorWindow
         }
     }
 
-    private Node CreateNode(UnityEngine.Object obj, string assetPath, bool isMainNode, bool hasDependencies)
+    private Node CreateNode(Object obj, string assetPath, bool isMainNode, bool hasDependencies)
     {
-        Node resultNode;
-        string assetGUID = AssetDatabase.AssetPathToGUID(assetPath);
-        if (m_GUIDNodeLookup.TryGetValue(assetGUID, out resultNode))
+        var assetGUID = AssetDatabase.AssetPathToGUID(assetPath);
+        if (m_GUIDNodeLookup.TryGetValue(assetGUID, out var resultNode))
         {
-            int currentDepth = (int)resultNode.userData;
+            var currentDepth = (int)resultNode.userData;
             resultNode.userData = currentDepth + 1;
             return resultNode;
         }
 
-        if (AssetDatabase.TryGetGUIDAndLocalFileIdentifier(obj, out var assetGuid, out long _))
+        if (AssetDatabase.TryGetGUIDAndLocalFileIdentifier(obj, out _, out long _))
         {
             var objNode = new Node
             {
@@ -228,15 +232,15 @@ public class AssetDependencyGraph : EditorWindow
                 Selection.activeObject = obj;
                 EditorGUIUtility.PingObject(obj);
             })
+            {
+                style =
                 {
-                    style =
-                    {
-                        height = 16.0f,
-                        alignSelf = Align.Center,
-                        alignItems = Align.Center
-                    },
-                    text = "Select"
-                });
+                    height = 16.0f,
+                    alignSelf = Align.Center,
+                    alignItems = Align.Center
+                },
+                text = "Select"
+            });
 
             var infoContainer = new VisualElement
             {
@@ -300,7 +304,8 @@ public class AssetDependencyGraph : EditorWindow
             // Ports
             if (!isMainNode)
             {
-                Port realPort = objNode.InstantiatePort(Orientation.Horizontal, Direction.Input, Port.Capacity.Single, typeof(Object));
+                var realPort = objNode.InstantiatePort(Orientation.Horizontal, Direction.Input, Port.Capacity.Single,
+                    typeof(Object));
                 realPort.portName = "Dependent";
                 objNode.inputContainer.Add(realPort);
             }
@@ -310,7 +315,8 @@ public class AssetDependencyGraph : EditorWindow
 #if UNITY_2018_1
                 Port port = objNode.InstantiatePort(Orientation.Horizontal, Direction.Output, typeof(Object));
 #else
-                Port port = objNode.InstantiatePort(Orientation.Horizontal, Direction.Output, Port.Capacity.Single, typeof(Object));
+                var port = objNode.InstantiatePort(Orientation.Horizontal, Direction.Output, Port.Capacity.Single,
+                    typeof(Object));
 #endif
                 port.portName = "Dependencies";
                 objNode.outputContainer.Add(port);
@@ -331,7 +337,7 @@ public class AssetDependencyGraph : EditorWindow
 
     private static void AddDivider(Node objNode)
     {
-        var divider = new VisualElement {name = "divider"};
+        var divider = new VisualElement { name = "divider" };
         divider.AddToClassList("horizontal");
         objNode.extensionContainer.Add(divider);
     }
@@ -342,26 +348,28 @@ public class AssetDependencyGraph : EditorWindow
         {
             m_GraphView.RemoveElement(edge);
         }
+
         m_AssetElements.Clear();
 
         foreach (var node in m_AssetElements)
         {
             m_GraphView.RemoveElement(node);
         }
+
         m_AssetElements.Clear();
         m_GUIDNodeLookup.Clear();
     }
 
     private void UpdateDependencyNodePlacement(GeometryChangedEvent e)
     {
-        (e.target as VisualElement).UnregisterCallback<GeometryChangedEvent>(UpdateDependencyNodePlacement);
-        
+        (e.target as VisualElement)?.UnregisterCallback<GeometryChangedEvent>(UpdateDependencyNodePlacement);
+
         // The current y offset in per depth
-        var depthYOffset  = new Dictionary<int, float>();
+        var depthYOffset = new Dictionary<int, float>();
 
         foreach (var node in m_DependenciesForPlacement)
         {
-            int depth = (int)node.userData;
+            var depth = (int)node.userData;
 
             if (!depthYOffset.ContainsKey(depth))
                 depthYOffset.Add(depth, 0.0f);
@@ -371,18 +379,18 @@ public class AssetDependencyGraph : EditorWindow
 
         // Move half of the node into negative y space so they're on either size of the main node in y axis
         var depths = new List<int>(depthYOffset.Keys);
-        foreach (int depth in depths)
+        foreach (var depth in depths)
         {
             if (depth == 0)
                 continue;
 
-            float offset = depthYOffset[depth];
+            var offset = depthYOffset[depth];
             depthYOffset[depth] = (0f - offset / 2.0f);
         }
 
         foreach (var node in m_DependenciesForPlacement)
         {
-            int depth = (int)node.userData;
+            var depth = (int)node.userData;
             node.SetPosition(new Rect(kNodeWidth * 1.5f * depth, depthYOffset[depth], 0, 0));
             depthYOffset[depth] += node.layout.height;
         }
