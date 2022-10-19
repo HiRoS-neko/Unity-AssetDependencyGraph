@@ -199,7 +199,7 @@ public class AssetDependencyGraph : EditorWindow
         }
     }
 
-    private Node CreateNode(Object obj, string assetPath, bool isMainNode, bool hasDependencies)
+    private Node CreateNode(UnityEngine.Object obj, string assetPath, bool isMainNode, bool hasDependencies)
     {
         Node resultNode;
         string assetGUID = AssetDatabase.AssetPathToGUID(assetPath);
